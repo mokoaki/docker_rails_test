@@ -1,0 +1,2 @@
+docker_containers_data/
+!docker_containers_data/redis/redis.conf
