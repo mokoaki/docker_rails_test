@@ -3,6 +3,34 @@
 - まずは各コンテナのテストを行い、後で連携させながら Docker-Compose に移行する
 - 各コンテナのversion指定はしといた方が良いかなと
 
+
+## rails
+
+- ruby のイメージを使用する
+
+こんな感じか？
+
+```sh
+export ROOT_REPO=/path/to/docker_rails_test
+
+docker run -d -it --name my_rails -w /application -v $ROOT_REPO/application:/application ruby:2.4.0 bash
+
+# docker rm -f my_rails
+```
+
+確認
+
+```sh
+# 接続
+docker exec -it my_rails bash
+
+bundle install
+
+rails -v
+
+exit
+```
+
 ## mariadb
 
 こんな感じか？
