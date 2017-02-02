@@ -1,8 +1,26 @@
 # dockerでRailsの開発環境テスト
 
-- まずは各コンテナのテストを行い、後で連携させながら Docker-Compose に移行する
-- 各コンテナのversion指定はしといた方が良いかなと
+## さっさとやることだけをメモ
 
+```sh
+docker run -d --name my_mariadb -v $ROOT_REPO/docker_containers_data/mariadb/persistent_data:/var/lib/mysql -v $ROOT_REPO/docker_containers_data/mariadb/config:/etc/mysql -e MYSQL_ROOT_PASSWORD=hogehoge mariadb:10.1.21
+docker run -d -it --name my_rails -w /application -v $ROOT_REPO/application:/application -p 3000:3000 --link my_mariadb:mariadb ruby:2.4.0 bash
+# redisは後で接続
+docker exec -it my_rails bash
+
+bundle install
+bin/rake db:create
+bin/rails s
+```
+
+[http://localhosat:3000](http://localhosat:3000) にアクセス
+
+## まずは各コンテナのテストを行い、後で連携させながら Docker-Compose に移行する
+
+## 何をする
+- 使うimageはruby, redis, mariadb
+- 各imageのversionは必ず指定する
+- redis, dbへの接続はunix socketを使う（予定）
 
 ## rails
 
@@ -13,7 +31,7 @@
 ```sh
 export ROOT_REPO=/path/to/docker_rails_test
 
-docker run -d -it --name my_rails -w /application -v $ROOT_REPO/application:/application ruby:2.4.0 bash
+docker run -d -it --name my_rails -w /application -v $ROOT_REPO/application:/application -p 3000:3000 --link my_mariadb:mariadb ruby:2.4.0 bash
 
 # docker rm -f my_rails
 ```
@@ -32,6 +50,9 @@ exit
 ```
 
 ## mariadb
+
+- データの永続化は RDB, docker_containers_data/redis/ にとりあえず
+  - 後でデータボリュームコンテナ化とやら？
 
 こんな感じか？
 
