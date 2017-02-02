@@ -1,2 +1,3 @@
 docker_containers_data/
-!docker_containers_data/redis/redis.conf
+!docker_containers_data/redis/config/
+!docker_containers_data/mariadb/config/
