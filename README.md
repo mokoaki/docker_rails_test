@@ -3,9 +3,12 @@
 ## さっさとやることだけをメモ
 
 ```sh
+export ROOT_REPO=/path/to/docker_rails_test
+
 docker run -d --name my_mariadb -v $ROOT_REPO/docker_containers_data/mariadb/persistent_data:/var/lib/mysql -v $ROOT_REPO/docker_containers_data/mariadb/config:/etc/mysql -e MYSQL_ROOT_PASSWORD=hogehoge mariadb:10.1.21
 docker run -d -it --name my_rails -w /application -v $ROOT_REPO/application:/application -p 3000:3000 --link my_mariadb:mariadb ruby:2.4.0 bash
 # redisは後で接続
+
 docker exec -it my_rails bash
 
 bundle install
