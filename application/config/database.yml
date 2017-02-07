@@ -15,8 +15,7 @@ default: &default
   pool: 5
   username: root
   password: hogehoge
-  host: <%= ENV['MARIADB_PORT_3306_TCP_ADDR'] %>
-  port: <%= ENV['MARIADB_PORT_3306_TCP_PORT'] %>
+  host: mariadb
 
 development:
   <<: *default

@@ -3,17 +3,12 @@
 ## さっさとやることだけをメモ
 
 ```sh
-export ROOT_REPO=/path/to/docker_rails_test
-
-docker run -d --name my_mariadb -v $ROOT_REPO/docker_containers_data/mariadb/persistent_data:/var/lib/mysql -v $ROOT_REPO/docker_containers_data/mariadb/config:/etc/mysql -e MYSQL_ROOT_PASSWORD=hogehoge mariadb:10.1.21
-docker run -d -it --name my_rails -w /application -v $ROOT_REPO/application:/application -p 3000:3000 --link my_mariadb:mariadb ruby:2.4.0 bash
-# redisは後で接続
-
-docker exec -it my_rails bash
+docker-compose up -d
+docker exec -it rails bash
 
 bundle install
-bin/rake db:create
-bin/rails s
+bin/rake db:create db:migrate
+bin/rails s -b 0.0.0.0
 ```
 
 [http://localhosat:3000](http://localhosat:3000) にアクセス
@@ -21,8 +16,12 @@ bin/rails s
 ## まずは各コンテナのテストを行い、後で連携させながら Docker-Compose に移行する
 
 ## 何をする
-- 使うimageはruby, redis, mariadb
-- 各imageのversionは必ず指定する
+- images
+  - ruby
+    - rails
+  - mariadb
+    - root:hogehoge
+  - redis
 - redis, dbへの接続はunix socketを使う（予定）
 
 ## rails
