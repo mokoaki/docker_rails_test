@@ -13,7 +13,9 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: hogehoge
   rails:
-    image: ruby:2.4.0
+    build:
+      context: .
+      dockerfile: ./docker_containers_data/rails/Dockerfile
     container_name: rails
     volumes:
       - "./application:/application"
@@ -23,4 +25,4 @@ services:
       - "3000:3000"
     restart: always
     working_dir: /application
-    command: tail -f /dev/null
+    command: bin/rails s -b 0.0.0.0

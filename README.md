@@ -4,16 +4,20 @@
 
 ```sh
 docker-compose up -d
-docker exec -it rails bash
-
-bundle install
-bin/rake db:create db:migrate
-bin/rails s -b 0.0.0.0
 ```
 
 [http://localhosat:3000](http://localhosat:3000) にアクセス
 
-## まずは各コンテナのテストを行い、後で連携させながら Docker-Compose に移行する
+なんかコマンド入れたかったら
+
+```sh
+docker exec -it rails bash
+
+bin/rake db:create db:migrate
+bundle install
+```
+
+# ここから下はどうやってやってきたかとかのメモ
 
 ## 何をする
 - images
