@@ -6,7 +6,7 @@
 docker-compose up -d
 ```
 
-[http://localhosat:3000](http://localhosat:3000) にアクセス
+[http://localhost:3000](http://localhost:3000) にアクセス
 
 なんかコマンド入れたかったら
 
@@ -15,6 +15,13 @@ docker exec -it rails bash
 
 bin/rake db:create db:migrate
 bundle install
+```
+
+こんなのも
+
+```sh
+docker-compose stop
+docker-compose rm -f
 ```
 
 # ここから下はどうやってやってきたかとかのメモ
