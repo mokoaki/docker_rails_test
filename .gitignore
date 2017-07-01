@@ -17,7 +17,3 @@
 /yarn-error.log
 
 .byebug_history
-
-/docker_data/**
-!/docker_data/mariadb/persistent_data/.keep
-!/docker_data/redis/persistent_data/.keep

@@ -1,0 +1,38 @@
+version: '3.3'
+
+volumes:
+  moko_test_mariadb_persistent_data: {}
+  moko_test_redis_persistent_data: {}
+
+services:
+  app:
+    build:
+      context: .
+    container_name: moko_test_app_container
+    volumes:
+      - './:/moko_test'
+    depends_on:
+      - mariadb
+      - redis
+    restart: always
+    ports:
+      - '3000:3000'
+    tty: true # これ重要やよ
+    command: bash
+
+  mariadb:
+    image: mariadb:10.3.0
+    container_name: moko_test_mariadb_container
+    volumes:
+      - moko_test_mariadb_persistent_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: hogehoge
+
+  redis:
+    image: redis:3.2.9
+    container_name: moko_test_redis_container
+    volumes:
+      - moko_test_redis_persistent_data:/data
+    restart: always
+    command: redis-server

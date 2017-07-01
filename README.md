@@ -3,53 +3,52 @@
 ## さっさとやることだけをメモ
 
 ```sh
-docker-compose up -d
+$ docker-compose up -d
+$ docker-compose exec app bash
+
+# bin/rails db:create db:migrate
+# bin/rails s
 ```
+
+あたしゃね、自分の手で rails s しないと気持ち悪い古い人間なんすよ
 
 [http://localhost:3000](http://localhost:3000) にアクセス
 
-なんかコマンド入れたかったら
+## docker-composeメモ
 
 ```sh
-docker exec -it rails bash
-
-bin/rake db:create db:migrate
-bundle install
+$ docker-compose up
+$ docker-compose down
+$ docker-compose logs -f mariadb
 ```
 
-こんなのも
-
-```sh
-docker-compose stop
-docker-compose rm -f
-```
-
-## ここから下はどうやってやってきたかのメモ
+## ここから下は docker-compose を使わずに作業したメモ
 
 ### 構成の目標
-- images
-  - ruby
-    - rails
-  - mariadb
-    - root:hogehoge
-  - redis
+- ruby
+  - rails
+- mariadb
+  - root:hogehoge
+  - persistent data => data volume
+- redis
+  - persistent data => data volume
 
 - redis, mariadbへの接続はunix socketを使いたいけど・・まぁproductionだよね
 
 ### 参考
 Quickstart: Compose and Rails
 https://docs.docker.com/compose/rails/
-の通りにやってみる
+のあたりを参考にやってみる
 
 ### アプリ名
-MokoTest にしてやってみる
+とりあえず MokoTest で
+
+### まずは docker-compose を使用せずに各コンテナを手動で作成する
 
 #### 必須ファイル
-必須なファイルが4つありますとの事だが、まずはdocker-compose.ymlは放っておく
 - Dockerfile
 - Gemfile
 - Gemfile.lock
-- docker-compose.yml
 
 #### Dockerfile
 ```sh
@@ -65,15 +64,15 @@ RUN apt-get update -qq && apt-get install -y build-essential nodejs
 RUN mkdir /moko_test
 WORKDIR /moko_test
 
-ADD ./Gemfile /moko_test/Gemfile
-ADD ./Gemfile.lock /moko_test/Gemfile.lock
+ADD ./Gemfile ./Gemfile
+ADD ./Gemfile.lock ./Gemfile.lock
 
-RUN bundle install
-
-ADD . /moko_test
+RUN echo 'gem: --no-document' >> ~/.gemrc && \
+    bundle config --global jobs 2 && \
+    bundle install
 ```
 
-こんな感じらしい。保存する
+こんな感じで保存する
 
 #### Gemfile
 ```sh
@@ -81,72 +80,75 @@ $ bundle init
 ```
 で作成されるrailsだけが記述されているファイルでおｋ
 
-ちょっと編集する
+だいたいこんな感じの内容
 
 ```ruby
 # frozen_string_literal: true
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
-gem "rails", '5.0.1'
+gem 'rails', '5.1.2'
 ```
 
 こんな感じで
 
 #### Gemfile.lock
-このファイルは Dockerfile内にてADDされるので存在はしていてほしいけど、勝手に上書きされるので存在してればおｋ
+このファイルは 勝手に更新されるが、Dockerfile内にてCOPYされるので空でいいから存在はしていてほしい
 
 ```sh
-$ toush Gemfile.lock
+$ touch Gemfile.lock
 ```
 
 タッチしとく
 
 ### dockerイメージビルドしてみる
 ```sh
-$ docker build -t moko_test:2.4.1 .
+$ docker build -t moko_test_app_image:latest .
 ```
 
 ### dockerイメージを確認してみる
 ```sh
 $ docker images
-REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
-moko_test           latest              a7a320c4f7a6        50 seconds ago      776MB
+
+REPOSITORY              TAG                 IMAGE ID            CREATED             SIZE
+moko_test_app_image   latest              ec463dc78dc8        2 minutes ago       814MB
 ```
 
-出来てるす
+出来てる
 
-### moko_testコンテナを起動してみる
+### moko_test_app_container コンテナを起動してみる
 
-あたしは起動したタブで**rails s**して、他のタブから接続して操作するのが好きなので多分こんな感じ
 ```sh
-$ docker run -it --rm --name moko_test -v "$PWD":/moko_test -p 3000:3000 moko_test:2.4.1 bash
+$ docker run -it --rm --name moko_test_app_container -v "$PWD":/moko_test -p 3000:3000 moko_test_app_image:latest bash
 ```
 
 ### プロンプトが変わった
 ```sh
-root@60063e5bf8e5:/myapp#
+root@60063e5bf8e5:/moko_test#
 ```
 
-あー、起動したぽい
+起動したぽい
 
 ### rails new してみる
 ```sh
 $ root@d5c9f216efb4:/moko_test# rails new . --database=mysql --skip-test-unit --skip-turbolinks
 ```
 
-rails new プロジェクト名を省略して . を指定するとカレントディレクトリ名からプロジェクト名を勝手に作るらしいです　他の指定方法もあるかもしれない
+rails new プロジェクト名を省略して . を指定するとカレントディレクトリ名からプロジェクト名を勝手に作るらしいです　※他の指定方法もあるかもしれない
 
 Gemfileを上書きするか？と聞いてくるのでYESする
 
 色々エラーぽいのも出た
 
 Don't run Bundler as root. Bundler can ask for sudo if it is needed, and installing your bundle as root will break this application for all non-root users on this machine.
-- rootやめろって？とりえあず無視
+
+- rootやめろって？とりあえず無視
 
 The dependency tzinfo-data (>= 0) will be unused by any of the platforms Bundler is installing for. Bundler is installing for ruby but the dependency is only for x86-mingw32, x86-mswin32, x64-mingw32, java. To add those platforms to the bundle, run `bundle lock --add-platform x86-mingw32 x86-mswin32 x64-mingw32 java`.
-- windowsじゃなきゃtzinfo-dataは要らないぽい。Gemfileから削除
 
-あとはRailsのVersionを最新ぽいのに固定してGemfile更新、再度
+- windowsじゃなきゃtzinfo-dataは要らないぽい。Gemfileから削除する
+
+### Gemfileを更新したし、とりあえずupdateしとく
+
 ```sh
 $ root@d5c9f216efb4:/moko_test# bundle update
 ```
@@ -156,14 +158,15 @@ $ root@d5c9f216efb4:/moko_test# bundle update
 $ root@d5c9f216efb4:/moko_test# bin/rails c
 Running via Spring preloader in process 1438
 Loading development environment (Rails 5.1.2)
-irb(main):001:0>
+irb(main):001:0>Time.zone.now
+=> Tue, 1 Jul 2017 00:00:00 UTC +00:00
 ```
 
 あー、ええ感じや
 
 ### rails s 出来るんかね？
 ```sh
-$ root@d5c9f216efb4:/moko_test# bin/rails s -b 0.0.0.0
+$ root@d5c9f216efb4:/moko_test# bin/rails s
 => Booting Puma
 => Rails 5.1.2 application starting in development on http://0.0.0.0:3000
 => Run `rails server -h` for more startup options
@@ -177,37 +180,50 @@ Use Ctrl-C to stop
 
 あー、ええ感じや [http://localhost:3000](http://localhost:3000)
 
-### Railsのコンテナに新たに接続したい
+### Railsのコンテナに別のターミナルから接続したい
 ```sh
-$ docker exec -it moko_test bash
+$ docker exec -it moko_test_app_container bash
 root@56ce6da9ab90:/moko_test#
 ```
 
 きてるきてる
 
-### Railsから接続するmariadbのコンテナを起動してみる
-
-まぁコンテナをビルドする必要もなく、直接runする
+### moko_test_app_container コンテナから出る
 
 ```sh
-$ docker run -d --name mariadb -e MYSQL_ROOT_PASSWORD=hogehoge mariadb:10.3.0
+$ root@d5c9f216efb4:/moko_test# exit
+```
+
+### moko_test_app_container コンテナはどうなった
+
+消えました これは起動時に --rm を付けていたからである
+
+```sh
+docker ps -a
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+```
+
+### Railsから接続する mariadb のコンテナを起動してみる
+
+新しいイメージをビルドする必要もなく、直接runする
+
+```sh
+$ docker run -d --name moko_test_mariadb_container -e MYSQL_ROOT_PASSWORD=hogehoge mariadb:10.3.0
 ```
 
 ### 確認してみる
 ```sh
 $ docker ps -a
-CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
-c13912e39783        mariadb:10.3.0      "docker-entrypoint..."   10 seconds ago      Up 9 seconds        3306/tcp                 mariadb
+CONTAINER ID        IMAGE                          COMMAND                  CREATED             STATUS              PORTS                    NAMES
+d8ea0889a65a        mariadb:10.3.0                 "docker-entrypoint..."   4 seconds ago       Up 3 seconds        3306/tcp                 moko_test_mariadb_container
 ```
 
 あー起動してるっぽい
 
-### Railsのコンテナからリンクするように再起動する
+### Railsのコンテナを再起動する、今回はmariadbをリンクするようにして起動
 
 ```sh
-# コンテナ終了(exit)してから
-
-$ docker run -it --rm --name moko_test -v "$PWD":/moko_test -p 3000:3000 --link mariadb:mariadb moko_test:2.4.1 bash
+$ docker run -it --rm --name moko_test_app_container -v "$PWD":/moko_test -p 3000:3000 --link moko_test_mariadb_container:mariadb moko_test_app_image:latest bash
 ```
 
 ### 確認してみる
@@ -215,16 +231,16 @@ $ docker run -it --rm --name moko_test -v "$PWD":/moko_test -p 3000:3000 --link 
 ```sh
 root@0a40e45cac6b:/moko_test# env | grep MARIADB
 MARIADB_ENV_MARIADB_VERSION=10.3.0+maria~jessie
-MARIADB_PORT=tcp://172.17.0.3:3306
-MARIADB_PORT_3306_TCP=tcp://172.17.0.3:3306
+MARIADB_PORT=tcp://172.17.0.2:3306
+MARIADB_PORT_3306_TCP=tcp://172.17.0.2:3306
 MARIADB_PORT_3306_TCP_PORT=3306
 MARIADB_ENV_MYSQL_ROOT_PASSWORD=hogehoge
 MARIADB_PORT_3306_TCP_PROTO=tcp
 MARIADB_ENV_GOSU_VERSION=1.7
 MARIADB_ENV_no_proxy=*.local, 169.254/16
-MARIADB_NAME=/moko_test/mariadb
+MARIADB_NAME=/moko_test_app_container/mariadb
 MARIADB_ENV_MARIADB_MAJOR=10.3
-MARIADB_PORT_3306_TCP_ADDR=172.17.0.3
+MARIADB_PORT_3306_TCP_ADDR=172.17.0.2
 ```
 
 あー、たぶんこれでいいんじゃないかな
@@ -240,7 +256,7 @@ Running via Spring preloader in process 46
       create    app/models/temp.rb
 ```
 
-config/database.yml を修正して、接続先を環境変数から取得するようにする
+config/database.yml を修正する
 
 ```ruby
 default: &default
@@ -248,8 +264,8 @@ default: &default
   encoding: utf8
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   username: root
-  password: <%= ENV.fetch('MARIADB_ENV_MYSQL_ROOT_PASSWORD') %>
-  host: <%= ENV.fetch('MARIADB_PORT_3306_TCP_ADDR') %>
+  password: hogehoge
+  host: mariadb
 ```
 
 migrateする
@@ -269,16 +285,6 @@ root@0a40e45cac6b:/moko_test# bin/rails db:migrate
 確認してみる
 
 ```sh
-root@0a40e45cac6b:/moko_test# bin/rails db:create
-Created database 'moko_test_development'
-Created database 'moko_test_test'
-
-root@0a40e45cac6b:/moko_test# bin/rails db:migrate
-== 20170630152109 CreateTemps: migrating ======================================
--- create_table(:temps)
-   -> 0.0843s
-== 20170630152109 CreateTemps: migrated (0.0846s) =============================
-
 root@0a40e45cac6b:/moko_test# bin/rails c
 Running via Spring preloader in process 131
 Loading development environment (Rails 5.1.2)
@@ -298,7 +304,10 @@ irb(main):002:0> Temp.first
 あー、これはイケてるっぽい
 
 
-### 使わないとは思うけど、mariadbのコンテナに新たに接続したい
+### （たとえば）mariadbのコンテナに接続して操作したい
+
+適当な新しいコンソールのタブから
+
 ```sh
 $ docker exec -it mariadb bash
 root@4054dedf1f17:/#
@@ -331,15 +340,40 @@ MariaDB [moko_test_development]> select * from temps;
 1 row in set (0.00 sec)
 ```
 
-さっき作ったレコードが見えたりする
+さっき作ったレコードが見える
 
 ### 当然ながら、mariadbのコンテナ削除と同時ににmariadbの中身も失われるので永続化する
-mariadbを起動する時に/var/lib/mysqlを適当なローカルにマウントしておく
 
-ただし、この例のようにアプリ内のディレクトリを永続化領域として使うのはどうなのか？は後で調べる
+データボリュームを作成しておく　一度作ったら明示的に消すまでずっと残る
 
 ```sh
-$ docker run -d --name mariadb -v "$PWD"/docker_data/mariadb/persistent_data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=hogehoge mariadb:10.3.0
+$ docker volume create --name moko_test_mariadb_persistent_data
+```
+
+確認
+
+```sh
+$ docker volume ls
+
+DRIVER              VOLUME NAME
+local               moko_test_mariadb_persistent_data
+```
+
+いつか消すときはこんな感じ
+
+```sh
+$ docker volume rm moko_test_mariadb_persistent_data
+```
+
+### では mariadbを立ち上げなおしてみる
+
+```sh
+$ docker stop moko_test_mariadb_container
+$ docker rm moko_test_mariadb_container
+```
+
+```sh
+$ docker run -d --name moko_test_mariadb_container -v moko_test_mariadb_persistent_data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=hogehoge mariadb:10.3.0
 ```
 
 mariadb落として上げて、データが消えてないことを確認してね
@@ -348,7 +382,7 @@ mariadb落として上げて、データが消えてないことを確認して�
 どのレベルのログなのか確認が必要ですが、一応こんな方法もあるぽい
 
 ```sh
-$ docker logs -f mariadb
+$ docker logs -f moko_test_mariadb_container
 ```
 
 ログは自分で見て確かめる
@@ -357,14 +391,21 @@ $ docker logs -f mariadb
 まぁマウントですよね
 
 ```sh
--v ....../mariadb/config:/etc/mysql
+-v どこかのディレクトリ/mariadb/config:/etc/mysql
 ```
 
 上記みたいな感じのオプションでイケる　これは開発環境的にまだ不要かなとも思うのでメモ程度で
 
-### redisも起動しとこう
+### redisも起動する
+
+もう最初から永続化しておく
+
 ```sh
-$ docker run -d --name redis redis:3.2.9 redis-server
+$ docker volume create --name moko_test_redis_persistent_data
+```
+
+```sh
+$ docker run -d --name moko_test_redis_container -v moko_test_redis_persistent_data:/data redis:3.2.9 redis-server
 ```
 
 検証どうしよう
@@ -372,15 +413,15 @@ $ docker run -d --name redis redis:3.2.9 redis-server
 ### とりえあずRailsのコンテナからリンクするように再起動する
 
 ```sh
-# コンテナ終了(exit)してから
+# moko_test_app_container を終了(exit)してから
 
-$ docker run -it --rm --name moko_test -v "$PWD":/moko_test -p 3000:3000 --link mariadb:mariadb --link redis:redis moko_test:2.4.1 bash
+$ docker run -it --rm --name moko_test_app_container -v "$PWD":/moko_test -p 3000:3000 --link moko_test_mariadb_container:mariadb --link moko_test_redis_container:redis moko_test_app_image:latest bash
 
 $ docker ps -a
-CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
-06e21f7898bc        moko_test:2.4.1     "bash"                   35 seconds ago      Up 33 seconds       0.0.0.0:3000->3000/tcp   moko_test
-ff0c78c9b095        mariadb:10.3.0      "docker-entrypoint..."   37 seconds ago      Up 36 seconds       3306/tcp                 mariadb
-2ffdb195e704        redis:3.2.9         "docker-entrypoint..."   2 minutes ago       Up 2 minutes        6379/tcp                 redis
+CONTAINER ID        IMAGE                          COMMAND                  CREATED             STATUS              PORTS                    NAMES
+835299014d9a        moko_test_app_image:latest     "bash"                   6 seconds ago       Up 5 seconds        0.0.0.0:3000->3000/tcp   moko_test_app_container
+e738a8de3c5a        redis:3.2.9                    "docker-entrypoint..."   2 minutes ago       Up 2 minutes        6379/tcp                 moko_test_redis_container
+a01b5423dcd2        mariadb:10.3.0                 "docker-entrypoint..."   3 minutes ago       Up 3 minutes        3306/tcp                 moko_test_mariadb_container
 ```
 
 起動はしてるみたい
@@ -402,40 +443,22 @@ REDIS_ENV_REDIS_VERSION=3.2.9
 そして・・どうやって繋げてあそぼう
 ```
 
-### redis 永続化
-```
-$  docker run -d --name -v "$PWD"/docker_data/redis/persistent_data:/data redis redis:3.2.9 redis-server
-```
-
 ### redis(redis.conf等)を指定したい
 まぁマウントですよね
 
 ```sh
-docker run -d --name redis \
--v "$PWD"/docker_containers_data/redis/persistent_data:/data \
--v "$PWD"/docker_containers_data/redis/config/redis.conf:/usr/local/etc/redis/redis.conf \
+docker run -d --name moko_test_redis_container \
+-v moko_test_redis_persistent_data:/data \
+-v どこかのディレクトリ/redis/config:/usr/local/etc/redis/redis.conf \
 redis:3.2.9 redis-server /usr/local/etc/redis/redis.conf
 ```
 
 上記みたいな感じのオプションでイケる　これは開発環境的にまだ不要かなとも思うのでメモ程度で
 
-
 ### もちろんredisのログも
 
 ```sh
-$ docker logs -f redis
+$ docker logs -f moko_test_redis_container
 ```
 
 みれたりもする
-
-### メモ
-```sh
-これまでどこにも書かなかったけど
-$ docker kill moko_test
-$ docker stop moko_test
-$ docker rm moko_test
-これで起動中のコンテナは終了、消え去るでしょう
-```
-
-### ではdocker-composeでの起動を試しましょう
-docker-compose は複数のコンテナを同時に管理する仕組みです
