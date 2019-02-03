@@ -1,18 +1,29 @@
-FROM ruby:2.4.1
+FROM ruby:2.5.3
+LABEL maintainer="mokoriso@gmail.com"
 
-# build-essential ubuntu用C/C++コンパイラ、Make等の標準開発ツール一式
-# libpq-dev pg_config(PostgreSQL?)の為に必要？要らないかな？
-# nodejs 例のアレ
+ENV LANG="C.UTF-8" \
+    APP_HOME="/docker_rails_test"
 
-# RUN apt-get update -qq && apt-get install -y build-essential libpq-dev nodejs
-RUN apt-get update -qq && apt-get install -y build-essential nodejs
+WORKDIR $APP_HOME
 
-RUN mkdir /moko_test
-WORKDIR /moko_test
+RUN apt-get update && \
+    curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    # build-essential
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
+    gem update --system
 
-COPY ./Gemfile ./Gemfile
-COPY ./Gemfile.lock ./Gemfile.lock
+RUN groupadd -r --gid 1000 rails && \
+    useradd -m -r --uid 1000 --gid 1000 rails && \
+    mkdir -p $APP_HOME $BUNDLE_APP_CONFIG && \
+    chown -R rails:rails $APP_HOME && \
+    chown -R rails:rails $BUNDLE_APP_CONFIG
 
-RUN echo 'gem: --no-document' >> ~/.gemrc && \
-    bundle config --global jobs 2 && \
-    bundle install
+# 以降はrailsユーザ権限にて実行される
+USER rails
+
+RUN gem install bundler && \
+    bundle config --local jobs 4 && \
+    bundle config --local path vendor/bundle
