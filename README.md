@@ -128,5 +128,5 @@ bundle exec rails new docker_rails_test_app \
   --skip-bundle \
   --skip-git
 
-bin/rails generate scaffold User neme:string
+bin/rails generate scaffold User name:string
 ```
