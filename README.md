@@ -121,6 +121,7 @@ bundle exec rails new docker_rails_test_app \
   --database=mysql \
   --skip-action-mailer \
   --skip-action-cable \
+  --skip-active-storage \
   --skip-yarn \
   --skip-coffee \
   --skip-turbolinks \

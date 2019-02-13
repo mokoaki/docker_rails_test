@@ -27,9 +27,6 @@ Rails.application.configure do
     config.cache_store = :null_store
   end
 
-  # Store uploaded files on the local file system (see config/storage.yml for options)
-  config.active_storage.service = :local
-
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
 
@@ -54,7 +51,5 @@ Rails.application.configure do
   # routes, locales, etc. This feature depends on the listen gem.
   config.file_watcher = ActiveSupport::EventedFileUpdateChecker
 
-  config.web_console.whitelisted_ips = Socket.ip_address_list.map do |addrinfo|
-    IPAddr.new(addrinfo.ip_address).mask(24) if addrinfo.ipv4?
-  end.compact
+  config.web_console.whitelisted_ips = ['0.0.0.0/0', '::/0']
 end
