@@ -1,44 +1,60 @@
-## 素の[docker run]で起動する
+# 1. 素のdocker runで起動する
 
-### build
+私はRailsで試行錯誤する為に小さいRailsアプリのDocker開発環境を作りました
+
+まずはDockerfile。変な事をしていないか中を確認する
+
+## buildする
 
 ```
 docker image build -t docker_rails_test_image -f Dockerfile .
 ```
 
-### docker-networkを新規作成しないとダメだった
+## docker-networkを新規作成しないとダメだった
 
 ```
 docker network ls
-docker network create hogehoge-network
+docker network create docker-test-network
+
+# 忘れた頃に消す
+# docker network rm docker-test-network
 ```
 
-### MariaDB軽く起動
+## MariaDB軽く起動
 
-サクッと起動。永続化とか考えてない
+サクッと起動。永続化とかはここでは考えてない
 
 ```
 docker run --name docker_mariadb_test \
-           --net hogehoge-network \
+           --net docker-test-network \
            -e MYSQL_ROOT_PASSWORD=hogehoge \
            -p 3306:3306 \
            -d mariadb:10.4.2
 ```
 
-### 起動、接続
-
-MACなら `consistency=cached` 重要だった
+確認
 
 ```
-docker run --rm -it \
+docker container ls -a
+```
+
+## Railsアプリ起動
+
+MACなら 'consistency=cached' 重要だった
+
+```
+docker run -it \
            --name docker_rails_test \
-           --net hogehoge-network \
+           --net docker-test-network \
            --mount type=bind,src=$(pwd),dst=/docker_rails_test,consistency=cached \
            -p 3000:3000 \
-           docker_rails_test_image bash
+           docker_rails_test_app \
+           bash
 ```
 
-### 例の
+プロンプトが変わり、もう中に入ってます
+
+### いつもの
 
 ```
 bundle check || bundle install
@@ -51,73 +67,48 @@ bin/rails s
 - http://localhost:3000/rails/info/properties
 - http://localhost:3000/rails/info/routes
 
-## docker-composeを使ってみる
+# 2. docker-composeを使ってみる
 
-./docker-compose.ymlを配置しました
+次はdocker-compose.yml。変な事をしていないか中を確認する
 
-### docker-networkはもう要らない
+MariaDBの永続化とか実はやってる
+
+## docker-networkはもう要らない
 
 ```
 docker network ls
-docker network rm hogehoge-network
+docker network rm docker-test-network
 ```
 
-起動する。一緒に管理できる
+## はい起動。同時に管理できる
 
 ```
 docker-compose up
 ```
 
-別ターミナルで
-```
-docker exec -it docker_rails_test bash
+## いつもの
 
-bundle check || bundle install
+```
+bin/bundle check || bin/bundle install
 bin/rake db:create db:migrate db:seed
 bin/rails s
+# bin/bundle exec pumactl start
 ```
 
-したり、
+- http://localhost:3000
+- http://localhost:3000/rails/info/properties
+- http://localhost:3000/rails/info/routes
 
+## 別ターミナルからの接続
 
 ```
-docker-compose up -d
 docker-compose exec app bash
-
-bundle check || bundle install
-bin/rake db:create db:migrate db:seed
-bin/rails s
 ```
 
-したりする
-
-他にも
+# 3. rails newした時のメモ
 
 ```
-docker-compose down
-docker-compose logs -f mariadb
-```
-
-とかできる便利
-
-## メモ
-
-### 以前は [docker ps] だった
-
-```
-docker container ls -a
-```
-
-### 以前は [docker images] だった
-
-```
-docker image ls
-```
-
-### 最初に行った事メモ
-
-```
-bundle exec rails new docker_rails_test_app \
+rails new docker_rails_test_app \
   --database=mysql \
   --skip-action-mailer \
   --skip-action-cable \
@@ -130,4 +121,31 @@ bundle exec rails new docker_rails_test_app \
   --skip-git
 
 bin/rails generate scaffold User name:string
+```
+
+# 4. おまけ
+
+```
+# ログ観る
+docker-compose logs
+docker-compose logs -f
+
+# 全ての停止中のコンテナ、ボリューム、ネットワーク、イメージを一括削除する
+docker system prune
+
+# 使われていないimageを一括削除する
+docker image prune
+docker image ls -a
+
+# 停止しているコンテナをすべて削除
+docker container prune
+ocker container ls -a
+
+# 使っていないnetworkの一括削除
+docker network prune
+docker network list
+
+# どのコンテナからも使われていないボリュームの削除
+docker volume prune
+docker volume ls
 ```
