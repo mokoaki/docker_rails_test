@@ -1,0 +1,55 @@
+AllCops:
+  TargetRubyVersion: 2.5
+
+Rails:
+  Enabled: true
+
+# チェック対象外
+AllCops:
+  Exclude:
+    - bin/*
+    - db/schema.rb
+    - vendor/**/*
+
+# コメントはASCII文字で記述 => disable
+Style/AsciiComments:
+  Enabled: false
+
+# ["a", "b", "c"] は %w表記にて記述 => disable
+Style/WordArray:
+  Enabled: false
+
+# [:a, :b, :c] は %i表記にて記述 => disable
+Style/SymbolArray:
+  Enabled: false
+
+# 一行の長さチェック
+Metrics/LineLength:
+  Max: 80 # => デフォルト値:80
+  Exclude:
+    - db/migrate/* # => チェック対象外
+
+# class, module前にて説明を明記
+Style/Documentation:
+  Exclude:
+    - db/migrate/* # => チェック対象外
+
+# クラスは小さく心がける
+Metrics/ClassLength:
+  Exclude:
+    - db/migrate/* # => チェック対象外
+
+# モジュールは小さく心がける
+Metrics/ModuleLength:
+  Exclude:
+    - db/migrate/* # => チェック対象外
+
+# メソッドは小さく心がける
+Metrics/MethodLength:
+  Exclude:
+    - db/migrate/* # => チェック対象外
+
+# メソッドはシンプルに心がける
+Metrics/AbcSize:
+  Exclude:
+    - db/migrate/* # => チェック対象外
