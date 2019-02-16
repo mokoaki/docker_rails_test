@@ -51,7 +51,7 @@ bin/rails s
 - http://localhost:3000/rails/info/properties
 - http://localhost:3000/rails/info/routes
 
-## docker-compoerを使ってみる
+## docker-composeを使ってみる
 
 ./docker-compose.ymlを配置しました
 
