@@ -1,6 +1,9 @@
-# 1. 素のdocker runで起動する
+# 小さいrailsアプリのDocker開発環境を作る
 
-私はRailsで試行錯誤する為に小さいRailsアプリのDocker開発環境を作りました
+gemはvendor/bundleにインスコしたかったが
+**$BUNDLE_APP_CONFIG**周りの問題に太刀打ちできなかったのでimage内部にインスコされます
+
+# 1. 素のdocker runで起動する
 
 まずはDockerfile。変な事をしていないか中を確認する
 
@@ -57,10 +60,10 @@ docker run -it \
 ### いつもの
 
 ```
-bundle check || bundle install
+bin/bundle check || bin/bundle install
 bin/rake db:create db:migrate db:seed
 bin/rails s
-# bundle exec pumactl start
+# bin/bundle exec pumactl start
 ```
 
 - http://localhost:3000
