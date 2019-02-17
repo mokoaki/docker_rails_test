@@ -2,14 +2,16 @@ FROM ruby:2.5.3
 LABEL maintainer="mokoriso@gmail.com"
 
 ENV LANG="C.UTF-8" \
-    APP_HOME="/docker_rails_test"
+    APP_HOME="/docker_rails_test" \
+    EDITOR="vim"
 
 WORKDIR $APP_HOME
 
 RUN apt-get update && \
     curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
-    apt-get install -y --no-install-recommends nodejs && \
-    # build-essential
+    apt-get install -y --no-install-recommends nodejs \
+      # build-essential \
+      vim && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
