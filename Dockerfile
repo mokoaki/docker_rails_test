@@ -30,5 +30,9 @@ WORKDIR $APP_HOME
 
 COPY ["./Gemfile", "./Gemfile.lock", "./"]
 
-RUN gem install bundler && \
+RUN gem update bundler && \
   bundle install --jobs=4
+
+RUN echo "alias ll='ls -alG'" >> ~/.bash_aliases && \
+  echo "HISTIGNORE='ll*:ls*:history*:exit'" >> ~/.bashrc && \
+  echo "HISTFILE='${APP_HOME}/tmp/.bash_history'" >> ~/.bashrc

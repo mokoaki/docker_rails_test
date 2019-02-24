@@ -11,7 +11,7 @@ begin
 
   # IRB.conf[:AUTO_INDENT] = true
   IRB.conf[:HISTORY_FILE] = history_file_path
-  IRB.conf[:SAVE_HISTORY] = 100
+  IRB.conf[:SAVE_HISTORY] = 1000
 rescue StandardError => e
   puts "#{e} #{__FILE__}:#{__LINE__}"
 end
