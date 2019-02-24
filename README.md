@@ -1,13 +1,14 @@
 # 小さいrailsアプリのDocker開発環境を作る
 
-gemはvendor/bundleにインスコしたかったが
-**$BUNDLE_APP_CONFIG**周りの問題に太刀打ちできなかったのでimage内部にインスコされます
+gemはvendor/bundleにインスコしたかったのでアレコレしてみたが  
+**$BUNDLE_APP_CONFIG**周りの問題に太刀打ちできなかったので諦めました  
+image内部にインスコします。そのかわり爆速化しました。最初からこうするべきだったんじゃ・・
 
-# 1. 素のdocker runで起動する
+# 1. 素のdocker runで起動してみる
 
 まずはDockerfile。変な事をしていないか中を確認する
 
-## buildする
+## buildしてみる
 
 ```
 docker image build -t docker_rails_test_image -f Dockerfile .
@@ -165,7 +166,7 @@ docker-compose logs -f app
 docker-compose down
 ```
 
-ビルド中に落ちても泣かないで原因救命
+ビルド中に落ちても泣かない
 
 ```
 # 死ぬ直前あたりの状態でコンテナが死んでいるのが見えると思う
