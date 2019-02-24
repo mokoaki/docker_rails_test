@@ -22,6 +22,10 @@ Style/WordArray:
 Style/SymbolArray:
   Enabled: false
 
+# 空メソッドは1行で記述する => disable
+Style/EmptyMethod:
+  Enabled: false
+
 # 一行の長さチェック
 Metrics/LineLength:
   Max: 80 # => デフォルト値:80
