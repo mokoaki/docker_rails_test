@@ -1,15 +1,14 @@
 AllCops:
-  TargetRubyVersion: 2.5
+  TargetRubyVersion: 2.6
 
-Rails:
-  Enabled: true
-
-# チェック対象外
-AllCops:
+  # チェック対象外
   Exclude:
     - bin/*
     - db/schema.rb
     - vendor/**/*
+
+Rails:
+  Enabled: true
 
 # コメントはASCII文字で記述 => disable
 Style/AsciiComments:

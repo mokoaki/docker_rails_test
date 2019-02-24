@@ -1,4 +1,4 @@
-FROM ruby:2.5.3
+FROM ruby:2.6.1
 
 LABEL maintainer="mokoriso@gmail.com"
 
@@ -17,18 +17,18 @@ RUN apt-get update && \
   ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
   gem update --system
 
+COPY ["./Gemfile", "./Gemfile.lock", "${APP_HOME}/"]
+
 RUN groupadd -r --gid 1000 rails && \
   useradd -m -r --uid 1000 --gid 1000 rails && \
   mkdir -p $APP_HOME $BUNDLE_APP_CONFIG && \
   chown -R rails:rails $APP_HOME && \
   chown -R rails:rails $BUNDLE_APP_CONFIG
 
-# 以降はrailsユーザ権限にて実行される
+# (基本的に)以降はrailsユーザ権限にて実行される
 USER rails
 
 WORKDIR $APP_HOME
-
-COPY ["./Gemfile", "./Gemfile.lock", "./"]
 
 RUN gem update bundler && \
   bundle install --jobs=4
