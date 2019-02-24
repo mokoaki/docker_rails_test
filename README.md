@@ -67,6 +67,7 @@ bin/rails s
 ```
 
 - http://localhost:3000
+- http://localhost:3000/users
 - http://localhost:3000/rails/info/properties
 - http://localhost:3000/rails/info/routes
 
@@ -99,6 +100,7 @@ bin/rails s
 ```
 
 - http://localhost:3000
+- http://localhost:3000/users
 - http://localhost:3000/rails/info/properties
 - http://localhost:3000/rails/info/routes
 
@@ -152,3 +154,26 @@ docker network list
 docker volume prune
 docker volume ls
 ```
+
+```
+docker-compose build --no-cache
+docker-compose up -d
+docker-compose exec app bash
+docker-compose logs
+docker-compose logs -f
+docker-compose logs -f app
+docker-compose down
+```
+
+ビルド中に落ちても泣かないで原因救命
+
+```
+# 死ぬ直前あたりの状態でコンテナが死んでいるのが見えると思う
+docker container ls -a
+
+# イメージとしてコミットする
+docker commit 5d0072ce27fc preserve_corpses_image
+
+# その状態でrun
+docker run --rm -it preserve_corpses_image bash
+ ```
