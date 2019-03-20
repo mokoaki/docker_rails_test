@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+app_root = ENV.fetch('PWD') { File.expand_path('../', __dir__) }
+pidfile "#{app_root}/tmp/pids/puma.pid"
+state_path "#{app_root}/tmp/pids/puma.state"
+workers 2
+daemonize
+
 # Puma can serve each request in a thread from an internal thread pool.
 # The `threads` method setting takes two numbers: a minimum and maximum.
 # Any libraries that use thread pools should be configured to match

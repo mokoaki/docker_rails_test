@@ -1,3 +1,5 @@
-# この設定ファイルは参照されません
-# https://github.com/mokoaki/docker_rails_test/commit/e79c5f55b37694a73c7a8c16ad18982e0f1026bc
-# /usr/local/bundle/configを編集するか、Dockerfileを更新してください
+---
+# BUNDLE_PATH: "vendor/bundle"
+BUNDLE_JOBS: "4"
+BUNDLE_CLEAN: "true"
+BUNDLE_RETRY: "3"

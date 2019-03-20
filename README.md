@@ -29,11 +29,12 @@ docker network create docker-test-network
 サクッと起動。永続化とかはここでは考えてない
 
 ```
-docker run --name docker_mariadb_test \
-           --net docker-test-network \
-           -e MYSQL_ROOT_PASSWORD=hogehoge \
-           -p 3306:3306 \
-           -d mariadb:10.4.2
+docker run \
+  --name docker_mariadb_test \
+  --net docker-test-network \
+  -e MYSQL_ROOT_PASSWORD=hogehoge \
+  -p 3306:3306 \
+  -d mariadb:10.4.2
 ```
 
 確認
@@ -47,13 +48,14 @@ docker container ls -a
 MACなら 'consistency=cached' 重要だった
 
 ```
-docker run -it \
-           --name docker_rails_test \
-           --net docker-test-network \
-           --mount type=bind,src=$(pwd),dst=/docker_rails_test,consistency=cached \
-           -p 3000:3000 \
-           docker_rails_test_app \
-           bash
+docker run \
+  -it \
+  --name docker_rails_test \
+  --net docker-test-network \
+  --mount type=bind,src=$(pwd),dst=/docker_rails_test,consistency=cached \
+  -p 3000:3000 \
+  docker_rails_test_app \
+  bash
 ```
 
 プロンプトが変わり、もう中に入ってます
@@ -61,10 +63,10 @@ docker run -it \
 ### いつもの
 
 ```
-bin/bundle check || bin/bundle install
-bin/rake db:create db:migrate db:seed
-bin/rails s
-# bin/bundle exec pumactl start
+gem update bundler | bin/bundle update
+bin/rails db:create db:migrate db:seed
+bundle exec pumactl start
+# bundle exec pumactl stop
 ```
 
 - http://localhost:3000
@@ -94,10 +96,10 @@ docker-compose up
 ## いつもの
 
 ```
-bin/bundle check || bin/bundle install
-bin/rake db:create db:migrate db:seed
-bin/rails s
-# bin/bundle exec pumactl start
+gem update bundler | bin/bundle update
+bin/rails db:create db:migrate db:seed
+bundle exec pumactl start
+# bundle exec pumactl stop
 ```
 
 - http://localhost:3000
